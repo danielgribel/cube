@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import cPickle
-from random import randint
+import random
 
 start_time = time.time()
 
@@ -10,8 +10,8 @@ def initial_config():
     cube['left'] = np.array([[2 for x in range(3)] for x in range(3)])
     cube['rigth'] = np.array([[3 for x in range(3)] for x in range(3)])
     cube['up'] = np.array([[4 for x in range(3)] for x in range(3)])
-    cube['down'] = np.array([[5 for x in range(3)] for x in range(3)])
-    cube['back'] = np.array([[6 for x in range(3)] for x in range(3)])
+    cube['back'] = np.array([[5 for x in range(3)] for x in range(3)])
+    cube['down'] = np.array([[6 for x in range(3)] for x in range(3)])
 
 def update_face(face):
     row1 = np.copy(cube[face][0,:])
@@ -136,24 +136,25 @@ def down_():
     down()
     down()
 
-def random_move(i):
+def move(i):
     MOVE[i]()
 
 cube = dict()
 initial_config()
 
-MOVE = {1 : front,
-        2 : front_,
-        3 : up,
-        4 : up_,
-        5 : back,
-        6 : back_,
-        7 : left,
-        8 : left_,
-        9 : rigth,
-        10 : rigth_,
-        11 : down,
-        12 : down_
+MOVE = {
+    1 : front,
+    -1 : front_,
+    2 : up,
+    -2 : up_,
+    3 : back,
+    -3 : back_,
+    4 : left,
+    -4 : left_,
+    5 : rigth,
+    -5 : rigth_,
+    6 : down,
+    -6 : down_
 }
 
 #moves = [0] * 99999
@@ -173,14 +174,13 @@ node_id_source = hash(cPickle.dumps(cube))
 #         for k in range(1, t+1):
 #             cont = cont+1
 #             #moves[k-1] = randint(1, 12)
-#             random_move(randint(1, 12))
+#             move(randint(1, 12))
     
 #         #for p in range(0, len(moves)):
-#         #    random_move(moves[p])
+#         #    move(moves[p])
 
 #     print i+1, cont, len(moves), ("%s s" % (time.time() - start_time))
 #     #print y, cont, len(moves), ("%s s" % (time.time() - start_time))
-
 
 cont = 0
 
@@ -188,30 +188,34 @@ for i in range(0, 10):
     t = pow(2, i+1)
     for j in range(0, 100):
         initial_config()
-
+        moves = [0] * t
         # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
         visited2 = ["" for x in range(t+1)]
         visited2[0] = node_id_source
         for k in range(1, t+1):
             cont = cont+1
-            temp = cube
-            random_move(randint(1, 12))
+            r = random.choice(range(-6,0) + range(1,7))
+            move(r)
+            # generate a key for current cube config. this is slow!!
             node_id = hash(cPickle.dumps(cube))
-
+            # check if node was already visited
             while node_id in visited2:
-                cube = temp
-                random_move(randint(1, 12))
+                move(r*(-1))
+                r = random.choice(range(-6,0) + range(1,7))
+                move(r)
                 node_id = hash(cPickle.dumps(cube))
-
+            moves[k-1] = r
             visited2[k] = node_id
     
         # execute uma BFS que parte de v e que termina ao alcancar a config inicial
-    
+        for y in reversed(moves):
+            move(y*(-1))
+
     print i+1, cont, t, ("%s s" % (time.time() - start_time))
     
 # for i in range(1, 100000):
 #     r = randint(1, 12)
-#     random_move(r)
+#     move(r)
 #     node_id = hashlib.md5(cPickle.dumps(cube)).hexdigest()
     
 #     if node_id in visited:
