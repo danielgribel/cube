@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import hashlib
 import cPickle
 from random import randint
 
@@ -14,7 +13,7 @@ def initial_config():
     cube['down'] = np.array([[5 for x in range(3)] for x in range(3)])
     cube['back'] = np.array([[6 for x in range(3)] for x in range(3)])
 
-def update_current_face(face):
+def update_face(face):
     row1 = np.copy(cube[face][0,:])
     row3 = np.copy(cube[face][2,:])
     col1 = np.copy(cube[face][:,0])
@@ -24,8 +23,18 @@ def update_current_face(face):
     cube[face][:,0] = row3
     cube[face][0,:] = col1[::-1]
 
+def update_face_(face):
+    row1 = np.copy(cube[face][0,:])
+    row3 = np.copy(cube[face][2,:])
+    col1 = np.copy(cube[face][:,0])
+    col3 = np.copy(cube[face][:,2])
+    cube[face][:,2] = row3[::-1]
+    cube[face][2,:] = col1
+    cube[face][:,0] = row1[::-1]
+    cube[face][0,:] = col3
+
 def front():
-    update_current_face('front')
+    update_face('front')
     #update other faces
     up = np.copy(cube['up'][2,:])
     rigth = np.copy(cube['rigth'][:,0])
@@ -37,7 +46,7 @@ def front():
     cube['left'][:,2] = down
 
 def up():
-    update_current_face('up')
+    update_face('up')
     # update other faces
     back = np.copy(cube['back'][0,:])
     rigth = np.copy(cube['rigth'][0,:])
@@ -49,7 +58,7 @@ def up():
     cube['left'][0,:] = front
 
 def back():
-    update_current_face('back')
+    update_face('back')
     # update other faces
     up = np.copy(cube['up'][0,:])
     left = np.copy(cube['left'][:,0])
@@ -61,7 +70,7 @@ def back():
     cube['rigth'][:,2] = down[::-1]
 
 def left():
-    update_current_face('left')
+    update_face('left')
     # update other faces
     up = np.copy(cube['up'][:,0])
     front = np.copy(cube['front'][:,0])
@@ -73,7 +82,7 @@ def left():
     cube['back'][:,2] = down[::-1]
 
 def rigth():
-    update_current_face('rigth')
+    update_face('rigth')
     # update other faces
     up = np.copy(cube['up'][:,2])
     back = np.copy(cube['back'][:,0])
@@ -85,7 +94,7 @@ def rigth():
     cube['front'][:,2] = down
     
 def down():
-    update_current_face('down')
+    update_face('down')
     # update other faces
     front = np.copy(cube['front'][2,:])
     rigth = np.copy(cube['rigth'][2,:])
@@ -153,10 +162,29 @@ MOVE = {1 : front,
 #node_id = hashlib.md5(cPickle.dumps(cube)).hexdigest()
 #visited[0] = node_id
 
-node_id_source = hashlib.md5(cPickle.dumps(cube)).hexdigest()
+node_id_source = hash(cPickle.dumps(cube))
+
+# for i in range(0, 10):
+#     cont = 0
+#     t = pow(2, i+1)
+#     for j in range(0, 100):
+#         initial_config()
+#         moves = [0] * t
+#         for k in range(1, t+1):
+#             cont = cont+1
+#             #moves[k-1] = randint(1, 12)
+#             random_move(randint(1, 12))
+    
+#         #for p in range(0, len(moves)):
+#         #    random_move(moves[p])
+
+#     print i+1, cont, len(moves), ("%s s" % (time.time() - start_time))
+#     #print y, cont, len(moves), ("%s s" % (time.time() - start_time))
+
+
 cont = 0
 
-for i in range(0, 5):
+for i in range(0, 10):
     t = pow(2, i+1)
     for j in range(0, 100):
         initial_config()
@@ -168,18 +196,19 @@ for i in range(0, 5):
             cont = cont+1
             temp = cube
             random_move(randint(1, 12))
-            node_id = hashlib.md5(cPickle.dumps(cube)).hexdigest()
+            node_id = hash(cPickle.dumps(cube))
 
             while node_id in visited2:
                 cube = temp
                 random_move(randint(1, 12))
-                node_id = hashlib.md5(cPickle.dumps(cube)).hexdigest()
+                node_id = hash(cPickle.dumps(cube))
 
             visited2[k] = node_id
-
+    
         # execute uma BFS que parte de v e que termina ao alcancar a config inicial
-
-
+    
+    print i+1, cont, t, ("%s s" % (time.time() - start_time))
+    
 # for i in range(1, 100000):
 #     r = randint(1, 12)
 #     random_move(r)
@@ -199,5 +228,4 @@ for i in range(0, 5):
 #     if(x != 0):
 #         print (moves[x-3],moves[x-2],moves[x-1],moves[x])
 
-print cont
-print("%s s" % (time.time() - start_time))
+# print i+1, cont, ("%s s" % (time.time() - start_time))
