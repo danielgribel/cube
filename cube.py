@@ -2,6 +2,7 @@ import time
 import numpy as np
 import cPickle
 import random
+import json
 
 start_time = time.time()
 
@@ -181,6 +182,17 @@ def down_():
 def move(i):
     MOVE[i]()
 
+def hash_node():
+    permutation = ""
+    json_string1 = json.dumps(cube['front'].tolist())
+    json_string2 = json.dumps(cube['left'].tolist())
+    json_string3 = json.dumps(cube['rigth'].tolist())
+    json_string4 = json.dumps(cube['up'].tolist())
+    json_string5 = json.dumps(cube['back'].tolist())
+    json_string6 = json.dumps(cube['down'].tolist())
+    permutation = json_string1 + json_string2 + json_string3 + json_string4 + json_string5 + json_string6
+    return hash(permutation)
+
 cube = dict()
 initial_config()
 
@@ -205,7 +217,8 @@ MOVE = {
 #node_id = hashlib.md5(cPickle.dumps(cube)).hexdigest()
 #visited[0] = node_id
 
-node_id_source = hash(cPickle.dumps(cube))
+#node_id_source = hash(cPickle.dumps(cube))
+node_id_source = hash_node()
 
 # for i in range(0, 10):
 #     cont = 0
@@ -227,11 +240,11 @@ node_id_source = hash(cPickle.dumps(cube))
 cont = 0
 #nodes_on_graph = set()
 
-for i in range(0, 12):
+for i in range(0, 14):
     t = pow(2, i+1)
     for j in range(0, 100):
         initial_config()
-        moves = [0] * t
+        #moves = [0] * t
         # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
         visited2 = set()        
         visited2.add(node_id_source)
@@ -241,14 +254,16 @@ for i in range(0, 12):
             r = random.choice(range(-6,0) + range(1,7))
             move(r)
             # generate a key for current cube config. this is slow!!
-            node_id = hash(cPickle.dumps(cube))
+            #node_id = hash(cPickle.dumps(cube))
+            node_id = hash_node()
             # check if node was already visited
             while node_id in visited2:
                 move(r*(-1))
                 r = random.choice(range(-6,0) + range(1,7))
                 move(r)
-                node_id = hash(cPickle.dumps(cube))
-            moves[k-1] = r
+                #node_id = hash(cPickle.dumps(cube))
+                node_id = hash_node()
+            #moves[k-1] = r
             visited2.add(node_id)
 
             #nodes_on_graph.add(node_id)
@@ -258,7 +273,7 @@ for i in range(0, 12):
         #    move(y*(-1))
 
     print i+1, cont, t, ("%s s" % (time.time() - start_time))
-  
+
 # for i in range(1, 100000):
 #     r = randint(1, 12)
 #     move(r)
