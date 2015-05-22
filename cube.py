@@ -209,7 +209,7 @@ def visit_neighbors(node_id, n, current_node):
 
     neighbor[node_id] = visited
 
-def bfs(n):
+def bfs(n, st):
     front = np.copy(cube['front'])
     up = np.copy(cube['up'])
     back = np.copy(cube['back'])
@@ -221,6 +221,8 @@ def bfs(n):
     l = list(itertools.product(list_permutation, repeat = n))
 
     for perm in l:
+        if((time.time() - st) >= 180):
+            return
         for i in range(0,n):
             move(perm[i])
 
@@ -265,15 +267,15 @@ cube = dict()
 neighbor = dict()
 dist = dict()
 list_permutation = [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6]
-cont_dfs = 0
 
 initial_config()
 node_id_source = hash_node()
 
-for i in range(0, 2):
+for i in range(0, 3):
     min = 999999
+    cont_dfs = 0
     t = pow(2, i+1)
-    for j in range(0, 100):
+    for j in range(0, 10):
         initial_config()
         #moves = [0] * t
         # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
@@ -298,15 +300,19 @@ for i in range(0, 2):
         # execute uma BFS que parte de v e que termina ao alcancar a config inicial
         current_node = hash_node()
         z = 0
+        st = time.time()
         while(current_node not in dist):
-            st = time.time()
-            bfs(z)
+            bfs(z, st)
             print("  bfs layer (%d): %s s" % (z, time.time() - st))
+            if((time.time() - st) >= 180):
+                break
             z = z+1
         
-        if dist[current_node] < min:
-            min = dist[current_node]
+        if current_node in dist:
+            if dist[current_node] < min:
+                min = dist[current_node]
 
+        print 'MIN:', min
         #print("%s: %d" % (current_node, dist[current_node]))
 
     print ("i=%d, #DFS=%d, t=%ss, min_dist=%d" % (i+1, cont_dfs, time.time() - start_time, min))
