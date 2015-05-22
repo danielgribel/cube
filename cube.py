@@ -3,6 +3,7 @@ import numpy as np
 import cPickle
 import random
 import json
+import itertools
 
 start_time = time.time()
 
@@ -193,8 +194,65 @@ def hash_node():
     permutation = json_string1 + json_string2 + json_string3 + json_string4 + json_string5 + json_string6
     return hash(permutation)
 
+def visit_neighbors(node_id, n, current_node):
+    visited = set()
+    for i in range(1, 7):
+        move(i)
+        visited.add(hash_node())
+        move(i*(-1))
+
+        move(i*(-1))
+        visited.add(hash_node())
+        move(i)
+
+    if(node_id_source in visited):
+        dist[current_node] = n
+
+    neighbor[node_id] = visited
+
+def bfs(n):
+    front = np.copy(cube['front'])
+    up = np.copy(cube['up'])
+    back = np.copy(cube['back'])
+    left = np.copy(cube['left'])
+    rigth = np.copy(cube['rigth'])
+    down = np.copy(cube['down'])
+
+    current_node = hash_node()
+    l = list(itertools.product(lista, repeat=n))
+
+    for perm in l:
+        for i in range(0,n):
+            move(perm[i])
+
+        perm_id = hash_node()
+
+        if(current_node not in dist):
+            # check if permutation was visited
+            if(perm_id not in neighbor):
+                visit_neighbors(perm_id, n+1, current_node)
+            else:
+                if(node_id_source in neighbor[perm_id]):
+                    dist[current_node] = n+1
+        else:
+            return
+
+        update_cube(np.copy(front), np.copy(up), np.copy(back), np.copy(left), np.copy(rigth), np.copy(down))
+
+def update_cube(front, up, back, left, rigth, down):
+    cube['front'] = front
+    cube['up'] = up
+    cube['back'] = back
+    cube['left'] = left
+    cube['rigth'] = rigth
+    cube['down'] = down
+
 cube = dict()
+neighbor = dict()
+dist = dict()
 initial_config()
+
+lista = [1,-1,2,-2,3,-3,4,-4,5,-5,6,-6]
 
 MOVE = {
     1 : front,
@@ -211,38 +269,13 @@ MOVE = {
     -6 : down_
 }
 
-#moves = [0] * 99999
-#c = [0] * 99999
-#visited = ["" for x in range(100000)]
-#node_id = hashlib.md5(cPickle.dumps(cube)).hexdigest()
-#visited[0] = node_id
-
-#node_id_source = hash(cPickle.dumps(cube))
 node_id_source = hash_node()
+cont_dfs = 0
 
-# for i in range(0, 10):
-#     cont = 0
-#     t = pow(2, i+1)
-#     for j in range(0, 100):
-#         initial_config()
-#         moves = [0] * t
-#         for k in range(1, t+1):
-#             cont = cont+1
-#             #moves[k-1] = randint(1, 12)
-#             move(randint(1, 12))
-    
-#         #for p in range(0, len(moves)):
-#         #    move(moves[p])
-
-#     print i+1, cont, len(moves), ("%s s" % (time.time() - start_time))
-#     #print y, cont, len(moves), ("%s s" % (time.time() - start_time))
-
-cont = 0
-#nodes_on_graph = set()
-
-for i in range(0, 14):
+for i in range(0, 2):
+    min = 999999
     t = pow(2, i+1)
-    for j in range(0, 100):
+    for j in range(0, 10):
         initial_config()
         #moves = [0] * t
         # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
@@ -250,47 +283,36 @@ for i in range(0, 14):
         visited2.add(node_id_source)
 
         for k in range(1, t+1):
-            cont = cont+1
+            cont_dfs = cont_dfs+1
             r = random.choice(range(-6,0) + range(1,7))
             move(r)
-            # generate a key for current cube config. this is slow!!
-            #node_id = hash(cPickle.dumps(cube))
+            # generate a key for current cube config
             node_id = hash_node()
             # check if node was already visited
             while node_id in visited2:
                 move(r*(-1))
                 r = random.choice(range(-6,0) + range(1,7))
                 move(r)
-                #node_id = hash(cPickle.dumps(cube))
                 node_id = hash_node()
             #moves[k-1] = r
             visited2.add(node_id)
 
-            #nodes_on_graph.add(node_id)
-
         # execute uma BFS que parte de v e que termina ao alcancar a config inicial
-        #for y in reversed(moves):
-        #    move(y*(-1))
+        current_node = hash_node()
+        z = 0
+        while(current_node not in dist):
+            st = time.time()
+            bfs(z)
+            print("  bfs layer (%d): %s s" % (z, time.time() - st))
+            z = z+1
+        
+        if dist[current_node] < min:
+            min = dist[current_node]
 
-    print i+1, cont, t, ("%s s" % (time.time() - start_time))
+        print("%s: %d" % (current_node, dist[current_node]))
 
-# for i in range(1, 100000):
-#     r = randint(1, 12)
-#     move(r)
-#     node_id = hashlib.md5(cPickle.dumps(cube)).hexdigest()
-    
-#     if node_id in visited:
-#         c[k] = i-1
-#         k = k+1
+    print ("i=%d, #DFS=%d, t=%ss, min_dist=%d" % (i+1, cont_dfs, time.time() - start_time, min))
 
-#     visited[i] = node_id
-#     moves[i-1] = r
-
-# print moves
-# print c
-
-# for x in c:
-#     if(x != 0):
-#         print (moves[x-3],moves[x-2],moves[x-1],moves[x])
-
-# print i+1, cont, ("%s s" % (time.time() - start_time))
+print len(neighbor)
+print len(dist)
+#print(dist)
