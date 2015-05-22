@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import cPickle
 import random
 import json
 import itertools
@@ -219,7 +218,7 @@ def bfs(n):
     down = np.copy(cube['down'])
 
     current_node = hash_node()
-    l = list(itertools.product(lista, repeat=n))
+    l = list(itertools.product(list_permutation, repeat = n))
 
     for perm in l:
         for i in range(0,n):
@@ -247,13 +246,6 @@ def update_cube(front, up, back, left, rigth, down):
     cube['rigth'] = rigth
     cube['down'] = down
 
-cube = dict()
-neighbor = dict()
-dist = dict()
-initial_config()
-
-lista = [1,-1,2,-2,3,-3,4,-4,5,-5,6,-6]
-
 MOVE = {
     1 : front,
     -1 : front_,
@@ -269,13 +261,19 @@ MOVE = {
     -6 : down_
 }
 
-node_id_source = hash_node()
+cube = dict()
+neighbor = dict()
+dist = dict()
+list_permutation = [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6]
 cont_dfs = 0
+
+initial_config()
+node_id_source = hash_node()
 
 for i in range(0, 2):
     min = 999999
     t = pow(2, i+1)
-    for j in range(0, 10):
+    for j in range(0, 100):
         initial_config()
         #moves = [0] * t
         # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
@@ -309,7 +307,7 @@ for i in range(0, 2):
         if dist[current_node] < min:
             min = dist[current_node]
 
-        print("%s: %d" % (current_node, dist[current_node]))
+        #print("%s: %d" % (current_node, dist[current_node]))
 
     print ("i=%d, #DFS=%d, t=%ss, min_dist=%d" % (i+1, cont_dfs, time.time() - start_time, min))
 
