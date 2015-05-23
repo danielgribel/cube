@@ -218,10 +218,11 @@ def bfs(n, st):
     down = np.copy(cube['down'])
 
     current_node = hash_node()
-    l = list(itertools.product(list_permutation, repeat = n))
+    layer_permutations = itertools.product(list_permutation, repeat = n)
 
-    for perm in l:
+    for perm in layer_permutations:
         if((time.time() - st) >= 180):
+            del layer_permutations
             return
         for i in range(0,n):
             move(perm[i])
@@ -236,6 +237,7 @@ def bfs(n, st):
                 if(node_id_source in neighbor[perm_id]):
                     dist[current_node] = n+1
         else:
+            del layer_permutations
             return
 
         update_cube(np.copy(front), np.copy(up), np.copy(back), np.copy(left), np.copy(rigth), np.copy(down))
@@ -271,8 +273,8 @@ list_permutation = [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6]
 initial_config()
 node_id_source = hash_node()
 
-for i in range(0, 3):
-    min = 999999
+for i in range(0, 4):
+    min = 999
     cont_dfs = 0
     t = pow(2, i+1)
     for j in range(0, 10):
@@ -297,23 +299,26 @@ for i in range(0, 3):
             #moves[k-1] = r
             visited2.add(node_id)
 
+        del visited2
+
         # execute uma BFS que parte de v e que termina ao alcancar a config inicial
         current_node = hash_node()
-        z = 0
+        layer = 0
         st = time.time()
         while(current_node not in dist):
-            bfs(z, st)
-            print("  bfs layer (%d): %s s" % (z, time.time() - st))
+            bfs(layer, st)
+            print("  bfs layer %d: %s " % (layer, time.time() - st))
             if((time.time() - st) >= 180):
                 break
-            z = z+1
+            layer = layer+1
         
         if current_node in dist:
             if dist[current_node] < min:
                 min = dist[current_node]
 
-        print 'MIN:', min
-        #print("%s: %d" % (current_node, dist[current_node]))
+        del st
+
+        print("i=%d, j=%d, MIN=%d" % (i+1, j+1, min))
 
     print ("i=%d, #DFS=%d, t=%ss, min_dist=%d" % (i+1, cont_dfs, time.time() - start_time, min))
 
