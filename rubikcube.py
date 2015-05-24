@@ -3,7 +3,7 @@ import numpy as np
 import cPickle
 import random
 import json
-
+import base64
 
 class RubikCube():
     "Rubik Cube representation."
@@ -187,7 +187,7 @@ class RubikCube():
     def move(self, i):
         RubikCube.MOVE[i](self)
 
-    def hash_node(self):
+    def encode_node(self):
         permutation = ""
         json_string1 = json.dumps(self.cube['front'].tolist())
         json_string2 = json.dumps(self.cube['left'].tolist())
@@ -195,9 +195,20 @@ class RubikCube():
         json_string4 = json.dumps(self.cube['up'].tolist())
         json_string5 = json.dumps(self.cube['back'].tolist())
         json_string6 = json.dumps(self.cube['down'].tolist())
-        permutation = json_string1 + json_string2 + json_string3 + json_string4 + json_string5 + json_string6
-        return hash(permutation)
-    
+        permutation = json_string1 + "\t" + json_string2 +  "\t" + json_string3 + "\t" +  json_string4 + "\t" +  json_string5 + "\t" +  json_string6
+        return stringToBase64(permutation)
+
+    def decode_node(self, encoded_node):
+        permutation = base64ToString(encoded_node)
+        faces = permutation.split('\t')
+        self.cube['front'] = np.array(json.loads(faces[0]))
+        self.cube['left'] = np.array(json.loads(faces[1]))
+        self.cube['rigth'] = np.array(json.loads(faces[2]))
+        self.cube['up'] = np.array(json.loads(faces[3]))
+        self.cube['back'] = np.array(json.loads(faces[4]))
+        self.cube['down'] = np.array(json.loads(faces[5]))
+        return self
+
     MOVE = {
         1 : front,
         -1 : front_,
@@ -213,38 +224,45 @@ class RubikCube():
         -6 : down_
     }
 
-# base bfs method TODO: modify to generate child node on the go (expand(vertex))
+
+def stringToBase64(s):
+    return base64.b64encode(s.encode('utf-8'))
+
+def base64ToString(b):
+    return base64.b64decode(b).decode('utf-8')
 
 def bfs(cube, goal):
-    vertex = cube.hash_node()
+    test = RubikCube()
+    vertex = cube.encode_node()
     queue = [(vertex, [vertex])]
     while queue:
         (vertex, path) = queue.pop(0)
-        for next in expand(vertex):
-            if node == end:
-                yield path + [next]
+        for next in expand(cube, vertex):
+            if next == goal:
+                print 'BFS found a path of ' + str(len(path + [next]))
+                return path + [next]
             else:
                 queue.append((next, path + [next]))
 
 def expand(cube, vertex):
     childs = []
+    cube.decode_node(vertex)
     for i in range(-6,0) + range(1,7):
-        print "TODO: "
+        cube.move(i)
+        childs.append(cube.encode_node())
+        cube.move(-i)
     return childs    
 
-def main():
+def dfs():
 
     start_time = time.time()
     cube = RubikCube()
     
-    #node_id_source = hash(cPickle.dumps(cube))
-    node_id_source = cube.hash_node()
+    node_id_source = cube.encode_node()
     cont = 0
-    # nodes_on_graph = set()
     for i in range(0, 14):
         t = pow(2, i+1)
-        for j in range(0, 100):
-            # moves = [0] * t
+        for j in range(0, 2):
             # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
             visited = set()
             visited.add(node_id_source)
@@ -252,19 +270,18 @@ def main():
                 cont = cont+1
                 r = random.choice(range(-6,0) + range(1,7))
                 cube.move(r)
-                # generate a key for current cube config. this is slow!!
-                node_id = cube.hash_node()
+                node_id = cube.encode_node()
                 # check if node was already visited
                 while node_id in visited:
                     cube.move(r*(-1))
                     r = random.choice(range(-6,0) + range(1,7))
                     cube.move(r)
-                    # node_id = hash(cPickle.dumps(cube))
-                    node_id = cube.hash_node()
-                # moves[k-1] = r
+                    node_id = cube.encode_node()
                 visited.add(node_id)
-                # nodes_on_graph.add(node_id)
+            print 'DFS done for ' + str(k) + ' nodes.'
+            bfs(cube, node_id_source)
         print i+1, cont, t, ("%s s" % (time.time() - start_time))
 
-    
+def main():
+    dfs()
 main()
