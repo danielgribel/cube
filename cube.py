@@ -3,6 +3,8 @@ import numpy as np
 import random
 import json
 import itertools
+import cPickle
+from guppy import hpy
 
 start_time = time.time()
 
@@ -191,23 +193,57 @@ def hash_node():
     json_string5 = json.dumps(cube['back'].tolist())
     json_string6 = json.dumps(cube['down'].tolist())
     permutation = json_string1 + json_string2 + json_string3 + json_string4 + json_string5 + json_string6
-    return hash(permutation)
+    h = hash(permutation)
+    return h
+
+#def visit_neighbors(node_id, n, current_node):
+#    visited = set()
+#    for i in range(1, 7):
+#        move(i)
+#        visited.add(hash_node())
+#        move(i*(-1))
+#
+#        move(i*(-1))
+#        visited.add(hash_node())
+#        move(i)
+#
+#    if(node_id_source in visited):
+#        dist[current_node] = n
+#
+#    neighbor[node_id] = visited
+#    del visited
+
+# def visit_neighbors(node_id, n, current_node):
+#     visited = set()
+#     for i in range(1, 7):
+#         move(i)
+#         visited.add(hash_node())
+#         move(i*(-1))
+
+#         move(i*(-1))
+#         visited.add(hash_node())
+#         move(i)
+
+#     if(node_id_source in visited):
+#         dist[current_node] = n
+#         neighbor[node_id] = 1
+#     else:
+#         neighbor[node_id] = 0
+#     del visited
 
 def visit_neighbors(node_id, n, current_node):
-    visited = set()
-    for i in range(1, 7):
-        move(i)
-        visited.add(hash_node())
-        move(i*(-1))
+    for i in range(0, 12):
+        mv = list_permutation[i]
+        move(mv)
+        if(hash_node() == node_id_source):
+            dist[current_node] = n
+            neighbor[node_id] = 1
+            move(mv*(-1))
+            return
+        else:
+            move(mv*(-1))
 
-        move(i*(-1))
-        visited.add(hash_node())
-        move(i)
-
-    if(node_id_source in visited):
-        dist[current_node] = n
-
-    neighbor[node_id] = visited
+    neighbor[node_id] = 0
 
 def bfs(n, st):
     front = np.copy(cube['front'])
@@ -222,25 +258,29 @@ def bfs(n, st):
 
     for perm in layer_permutations:
         if((time.time() - st) >= 180):
-            del layer_permutations
             return
-        for i in range(0,n):
+        for i in range(0, n):
             move(perm[i])
 
         perm_id = hash_node()
 
-        if(current_node not in dist):
-            # check if permutation was visited
-            if(perm_id not in neighbor):
-                visit_neighbors(perm_id, n+1, current_node)
+        if(perm_id != current_node):
+
+            if(current_node not in dist):
+                # check if permutation was visited
+                if(perm_id not in neighbor):
+                    visit_neighbors(perm_id, n+1, current_node)
+                else:
+                    #if(node_id_source in neighbor[perm_id]):
+                    if(neighbor[perm_id] == 1):
+                        dist[current_node] = n+1
+                        return
             else:
-                if(node_id_source in neighbor[perm_id]):
-                    dist[current_node] = n+1
-        else:
-            del layer_permutations
-            return
+                return
 
         update_cube(np.copy(front), np.copy(up), np.copy(back), np.copy(left), np.copy(rigth), np.copy(down))
+        del perm
+        del perm_id
 
 def update_cube(front, up, back, left, rigth, down):
     cube['front'] = front
@@ -273,19 +313,18 @@ list_permutation = [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6]
 initial_config()
 node_id_source = hash_node()
 
-for i in range(0, 4):
+for i in range(0, 3):
     min = 999
-    cont_dfs = 0
+    #cont_dfs = 0
     t = pow(2, i+1)
     for j in range(0, 10):
         initial_config()
-        #moves = [0] * t
         # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
-        visited2 = set()        
+        visited2 = set()
         visited2.add(node_id_source)
 
-        for k in range(1, t+1):
-            cont_dfs = cont_dfs+1
+        for k in range(0, t):
+            #cont_dfs = cont_dfs+1
             r = random.choice(range(-6,0) + range(1,7))
             move(r)
             # generate a key for current cube config
@@ -296,32 +335,29 @@ for i in range(0, 4):
                 r = random.choice(range(-6,0) + range(1,7))
                 move(r)
                 node_id = hash_node()
-            #moves[k-1] = r
             visited2.add(node_id)
 
         del visited2
 
         # execute uma BFS que parte de v e que termina ao alcancar a config inicial
         current_node = hash_node()
-        layer = 0
+        layer = 1
         st = time.time()
         while(current_node not in dist):
             bfs(layer, st)
             print("  bfs layer %d: %s " % (layer, time.time() - st))
+            layer = layer+1
             if((time.time() - st) >= 180):
                 break
-            layer = layer+1
         
-        if current_node in dist:
-            if dist[current_node] < min:
-                min = dist[current_node]
-
-        del st
+        if current_node in dist and dist[current_node] < min:
+            min = dist[current_node]
 
         print("i=%d, j=%d, MIN=%d" % (i+1, j+1, min))
 
-    print ("i=%d, #DFS=%d, t=%ss, min_dist=%d" % (i+1, cont_dfs, time.time() - start_time, min))
+    h = hpy()
+    print h.heap()
 
-print len(neighbor)
-print len(dist)
-#print(dist)
+    print("i=%d, t=%ss, min_dist=%d" % (i+1, time.time() - start_time, min))
+
+#print len(neighbor)
