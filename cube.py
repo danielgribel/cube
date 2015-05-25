@@ -1,10 +1,9 @@
+# Daniel Gribel and Joao Paulo Forny
 import time
 import numpy as np
 import random
 import json
 import itertools
-import cPickle
-from guppy import hpy
 
 start_time = time.time()
 
@@ -196,41 +195,6 @@ def hash_node():
     h = hash(permutation)
     return h
 
-#def visit_neighbors(node_id, n, current_node):
-#    visited = set()
-#    for i in range(1, 7):
-#        move(i)
-#        visited.add(hash_node())
-#        move(i*(-1))
-#
-#        move(i*(-1))
-#        visited.add(hash_node())
-#        move(i)
-#
-#    if(node_id_source in visited):
-#        dist[current_node] = n
-#
-#    neighbor[node_id] = visited
-#    del visited
-
-# def visit_neighbors(node_id, n, current_node):
-#     visited = set()
-#     for i in range(1, 7):
-#         move(i)
-#         visited.add(hash_node())
-#         move(i*(-1))
-
-#         move(i*(-1))
-#         visited.add(hash_node())
-#         move(i)
-
-#     if(node_id_source in visited):
-#         dist[current_node] = n
-#         neighbor[node_id] = 1
-#     else:
-#         neighbor[node_id] = 0
-#     del visited
-
 def visit_neighbors(node_id, n, current_node):
     for i in range(0, 12):
         mv = list_permutation[i]
@@ -313,18 +277,16 @@ list_permutation = [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6]
 initial_config()
 node_id_source = hash_node()
 
-for i in range(0, 3):
+for i in range(0, 4):
     min = 999
-    #cont_dfs = 0
     t = pow(2, i+1)
-    for j in range(0, 10):
+    for j in range(0, 100):
         initial_config()
         # execute uma DFS que parte da configuracao inicial e que termina apos visitar 2^i nos
         visited2 = set()
         visited2.add(node_id_source)
 
         for k in range(0, t):
-            #cont_dfs = cont_dfs+1
             r = random.choice(range(-6,0) + range(1,7))
             move(r)
             # generate a key for current cube config
@@ -355,9 +317,4 @@ for i in range(0, 3):
 
         print("i=%d, j=%d, MIN=%d" % (i+1, j+1, min))
 
-    h = hpy()
-    print h.heap()
-
     print("i=%d, t=%ss, min_dist=%d" % (i+1, time.time() - start_time, min))
-
-#print len(neighbor)
